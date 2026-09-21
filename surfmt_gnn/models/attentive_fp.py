@@ -4,9 +4,13 @@ Custom implementation based on the AttentiveFP algorithm (Xiong et al., 2020)
 with multi-head attention support. Architecture:
   - Input projection: atom features -> hidden dim
   - GATEConv first layer (incorporates edge features)
-  - GATConv message passing layers (multi-head, with GRU state updates)
+  - GATConv message passing layers (multi-head, with edge features, with GRU)
   - Super-node (virtual node) readout with multiple timesteps
   - Output projection to graph embedding
+
+v2 fixes:
+  - All GATConv layers now use edge features (edge_dim parameter)
+  - Consistent activation (ELU for conv layers, ReLU for GRU output)
 """
 import torch
 import torch.nn as nn
@@ -54,7 +58,7 @@ class MultiHeadAttentiveFP(nn.Module):
         self.lin_in = nn.Linear(in_channels, hidden_channels)
 
         # ---- Message passing layers ----
-        # Layer 0: GATEConv (handles edge features)
+        # Layer 0: GATEConv (handles edge features with gating mechanism)
         self.conv0 = GATEConv(
             in_channels=hidden_channels,
             out_channels=hidden_channels,
@@ -63,7 +67,8 @@ class MultiHeadAttentiveFP(nn.Module):
         )
         self.gru0 = nn.GRUCell(hidden_channels, hidden_channels)
 
-        # Layers 1..num_layers-1: GATConv (multi-head)
+        # Layers 1..num_layers-1: GATConv (multi-head, with edge features)
+        # v2: edge_dim=edge_dim so edge features inform attention weights
         self.convs = nn.ModuleList()
         self.grus = nn.ModuleList()
         for _ in range(num_layers - 1):
@@ -73,14 +78,15 @@ class MultiHeadAttentiveFP(nn.Module):
                 heads=num_heads,
                 concat=False,
                 dropout=dropout,
-                add_self_loops=False,
-                edge_dim=None,
+                add_self_loops=True,  # v2: enable self-loops (standard in GAT)
+                edge_dim=edge_dim,  # v2: use edge features for attention
             )
             self.convs.append(conv)
             self.grus.append(nn.GRUCell(hidden_channels, hidden_channels))
 
         # ---- Readout (super-node) ----
         # Virtual super-node connected to all atoms
+        # Readout doesn't have edge features (virtual edges), so no edge_dim
         self.readout_convs = nn.ModuleList()
         self.readout_grus = nn.ModuleList()
         for _ in range(num_timesteps):
@@ -127,9 +133,10 @@ class MultiHeadAttentiveFP(nn.Module):
         h = self.gru0(h_conv, h)
         h = F.relu(h)
 
-        # ---- Message passing: Layers 1..N-1 (GATConv multi-head) ----
+        # ---- Message passing: Layers 1..N-1 (GATConv multi-head with edge features) ----
+        # v2: pass edge_attr to all conv layers
         for conv, gru in zip(self.convs, self.grus):
-            h_conv = F.elu(conv(h, edge_index))
+            h_conv = F.elu(conv(h, edge_index, edge_attr))
             h_conv = F.dropout(h_conv, p=self.dropout, training=self.training)
             h = gru(h_conv, h)
             h = F.relu(h)
@@ -140,30 +147,24 @@ class MultiHeadAttentiveFP(nn.Module):
 
         for t in range(self.num_timesteps):
             # Build edges: super-node <-> all atoms
-            # super nodes are at indices num_atoms..num_atoms+batch_size-1
             num_atoms = h.size(0)
             batch_size = super_node.size(0)
 
-            # Create super-node graph: each super node connects to its atoms
             # New node indices for super nodes
             super_indices = torch.arange(
                 num_atoms, num_atoms + batch_size, device=x.device
             )
 
-            # Edges: atoms -> super nodes
-            row = batch  # atom -> which super node?
-            # Convert batch to actual super node index
+            # Map each atom to its super-node index
             super_per_atom = super_indices[batch]  # [num_atoms]
 
-            # Forward edges: atom -> super_node
+            # Bidirectional edges between atoms and their super-node
             edge_index_atom_to_super = torch.stack(
                 [torch.arange(num_atoms, device=x.device), super_per_atom], dim=0
             )
-            # Backward edges: super_node -> atom
             edge_index_super_to_atom = torch.stack(
                 [super_per_atom, torch.arange(num_atoms, device=x.device)], dim=0
             )
-            # Combine
             edge_index_readout = torch.cat(
                 [edge_index_atom_to_super, edge_index_super_to_atom], dim=1
             )
@@ -171,7 +172,7 @@ class MultiHeadAttentiveFP(nn.Module):
             # Combine atom states with super-node states
             h_combined = torch.cat([h, super_node], dim=0)  # [N+B, hidden]
 
-            # GATConv message passing
+            # GATConv message passing (no edge features for virtual edges)
             h_readout = F.elu(
                 self.readout_convs[t](h_combined, edge_index_readout)
             )

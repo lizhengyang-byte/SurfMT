@@ -26,7 +26,7 @@ class SurfMTGNN(nn.Module):
         super().__init__()
         self.config = config
 
-        # ---- Branch 1: Graph encoder ----
+        # ---- Branch 1: Graph encoder (Multi-Head AttentiveFP) ----
         self.graph_encoder = MultiHeadAttentiveFP(
             in_channels=config.gnn_in_channels,
             hidden_channels=config.gnn_hidden_dim,
@@ -62,13 +62,24 @@ class SurfMTGNN(nn.Module):
 
         # ---- Shared layer: 256 -> 128 ----
         self.shared_layer = nn.Linear(config.gnn_out_channels, config.shared_dim)
+        self.shared_norm = nn.LayerNorm(config.shared_dim)
 
         # ---- Task heads: 6 independent MLP heads (128 -> 64 -> 32 -> 1) ----
         head_dims = [config.shared_dim] + config.head_hidden_dims + [1]
         self.task_heads = nn.ModuleList([
-            MLP(hidden_dims=head_dims, activation="relu", dropout=0.0)
+            MLP(hidden_dims=head_dims, activation="relu", dropout=config.head_dropout)
             for _ in range(config.num_tasks)
         ])
+
+        self._init_weights()
+
+    def _init_weights(self):
+        """Initialize weights with Kaiming for ReLU layers."""
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.kaiming_normal_(m.weight, nonlinearity="relu")
+                if m.bias is not None:
+                    nn.init.zeros_(m.bias)
 
     def forward(self, data):
         """Forward pass.
@@ -104,7 +115,7 @@ class SurfMTGNN(nn.Module):
         # ---- Fusion ----
         z_concat = torch.cat([z_graph, z_temp, z_desc], dim=-1)  # [batch_size, 384]
         z_fused = self.fusion_mlp(z_concat)  # [batch_size, 256]
-        z_shared = F.relu(self.shared_layer(z_fused))  # [batch_size, 128]
+        z_shared = F.relu(self.shared_norm(self.shared_layer(z_fused)))  # [batch_size, 128]
 
         # ---- Task heads ----
         preds = torch.cat([head(z_shared) for head in self.task_heads], dim=-1)

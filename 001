@@ -1,0 +1,10 @@
+cd C:\Users\30353\Desktop\multi_task_graph_networks
+
+# 单模型测试（快速验证效果）
+python scripts/train_single.py --seed 42 --output_dir outputs/single_v4
+
+# 10折交叉验证
+python scripts/train_cv.py --output_dir outputs/cv_v4
+
+# 完整集成训练（6种子 x 10折 = 60模型）
+python scripts/train_ensemble.py --output_dir outputs/ensemble_v4

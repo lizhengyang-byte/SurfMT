@@ -54,7 +54,12 @@ class Trainer:
             T_0=config.T_0,
             T_mult=config.T_mult,
             eta_min=config.eta_min,
+            scheduler_type=config.scheduler_type,
+            patience=config.scheduler_patience,
+            factor=config.scheduler_factor,
+            total_epochs=config.max_epochs,
         )
+        self.scheduler_type = config.scheduler_type
 
         # Loss
         self.criterion = masked_mse_loss
@@ -76,6 +81,8 @@ class Trainer:
 
         # Training state
         self.best_val_loss = float("inf")
+        self.best_val_r2 = float("-inf")
+        self.early_stop_metric = "avg_r2"  # use avg_r2 for early stopping (higher is better)
         self.epochs_no_improve = 0
         self.epoch = 0
         self.history = []
@@ -181,7 +188,11 @@ class Trainer:
             val_loss = val_metrics["loss"]
 
             # LR scheduler step
-            self.scheduler.step()
+            if self.scheduler_type == "reduce_on_plateau":
+                # ReduceLROnPlateau uses validation metric
+                self.scheduler.step(val_metrics.get("avg_r2", 0.0))
+            else:
+                self.scheduler.step()
             current_lr = self.optimizer.param_groups[0]["lr"]
 
             # Record history
@@ -204,8 +215,10 @@ class Trainer:
                     f"lr={current_lr:.6f}"
                 )
 
-            # Early stopping check
-            if val_loss < self.best_val_loss:
+            # Early stopping check (based on avg_r2, higher is better)
+            current_r2 = val_metrics.get("avg_r2", float("nan"))
+            if not np.isnan(current_r2) and current_r2 > self.best_val_r2:
+                self.best_val_r2 = current_r2
                 self.best_val_loss = val_loss
                 self.epochs_no_improve = 0
                 self.save_checkpoint("best.pt")
@@ -213,6 +226,7 @@ class Trainer:
                 best_info = {
                     "epoch": epoch,
                     "val_loss": val_loss,
+                    "val_avg_r2": current_r2,
                     "metrics": val_metrics,
                 }
                 with open(self.save_dir / "best_metrics.json", "w") as f:

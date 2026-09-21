@@ -45,6 +45,8 @@ class SurfProDataset(InMemoryDataset):
         desc_std: np.ndarray = None,
         target_mean: np.ndarray = None,
         target_std: np.ndarray = None,
+        temp_mean: float = None,
+        temp_std: float = None,
         transform=None,
         pre_transform=None,
     ):
@@ -57,6 +59,8 @@ class SurfProDataset(InMemoryDataset):
             desc_std: Descriptor std (12,), required for test split.
             target_mean: Target mean (6,), required for test split.
             target_std: Target std (6,), required for test split.
+            temp_mean: Temperature mean for Z-score normalization.
+            temp_std: Temperature std for Z-score normalization.
             transform: PyG transform.
             pre_transform: PyG pre_transform.
         """
@@ -66,6 +70,8 @@ class SurfProDataset(InMemoryDataset):
         self.desc_std = desc_std
         self.target_mean = target_mean
         self.target_std = target_std
+        self.temp_mean = temp_mean
+        self.temp_std = temp_std
 
         # For train split, we compute desc_mean/std and target_mean/std inside process()
         # We'll store them as attributes after processing
@@ -74,7 +80,7 @@ class SurfProDataset(InMemoryDataset):
 
         # After loading (from cache or fresh process), ensure scaler attributes are set
         # If process() was not called (loaded from cache), load scaler from saved file
-        if self.desc_mean is None or self.target_mean is None:
+        if self.desc_mean is None or self.target_mean is None or not hasattr(self, 'temp_mean'):
             scaler_path = Path(self.processed_dir) / f"scaler_{self.split}.pt"
             if scaler_path.exists():
                 scaler = torch.load(scaler_path, weights_only=False)
@@ -86,6 +92,10 @@ class SurfProDataset(InMemoryDataset):
                     self.target_mean = scaler["target_mean"].numpy()
                 if self.target_std is None and "target_std" in scaler:
                     self.target_std = scaler["target_std"].numpy()
+                if "temp_mean" in scaler:
+                    self.temp_mean = float(scaler["temp_mean"])
+                if "temp_std" in scaler:
+                    self.temp_std = float(scaler["temp_std"])
                 if "type_map" in scaler:
                     self.type_map = scaler["type_map"]
 
@@ -123,6 +133,21 @@ class SurfProDataset(InMemoryDataset):
         # Ensure we have float32 arrays
         self.desc_mean = np.asarray(self.desc_mean, dtype=np.float32)
         self.desc_std = np.asarray(self.desc_std, dtype=np.float32)
+
+        # ---- Fit temperature scaler on train split ----
+        # Paper uses (T - 25) / 35 normalization.
+        # We also support Z-score via temp_mean/temp_std parameters.
+        # Default: paper's (T-25)/35 normalization for reproducibility.
+        if self.split == "train":
+            self.temp_mean = 25.0
+            self.temp_std = 35.0  # (T-25)/35 normalization from paper
+        else:
+            if not hasattr(self, 'temp_mean') or self.temp_mean is None:
+                self.temp_mean = 25.0
+                self.temp_std = 35.0
+            else:
+                self.temp_mean = float(self.temp_mean)
+                self.temp_std = float(self.temp_std)
 
         # ---- Fit target scaler on train split (Z-score normalization) ----
         # This is essential for multi-task learning with different magnitude targets
@@ -163,13 +188,13 @@ class SurfProDataset(InMemoryDataset):
             # Graph features
             x, edge_index, edge_attr = smiles_to_graph(smi)
 
-            # Temperature
+            # Temperature - Z-score normalized (stronger signal than (T-25)/35)
             temp_raw = row.get("temp", np.nan)
             if pd.isna(temp_raw):
                 temp_norm = 0.0
                 temp_mask = 0
             else:
-                temp_norm = (float(temp_raw) - 25.0) / 35.0
+                temp_norm = (float(temp_raw) - self.temp_mean) / self.temp_std
                 temp_mask = 1
 
             # Descriptors (Z-score normalized)
@@ -231,6 +256,8 @@ class SurfProDataset(InMemoryDataset):
                 "desc_std": torch.from_numpy(self.desc_std),
                 "target_mean": torch.from_numpy(self.target_mean),
                 "target_std": torch.from_numpy(self.target_std),
+                "temp_mean": self.temp_mean,
+                "temp_std": self.temp_std,
                 "type_map": self.type_map,
             },
             scaler_path,

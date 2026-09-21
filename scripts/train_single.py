@@ -67,6 +67,8 @@ def main():
         desc_std=train_ds.desc_std,
         target_mean=train_ds.target_mean,
         target_std=train_ds.target_std,
+        temp_mean=train_ds.temp_mean,
+        temp_std=train_ds.temp_std,
     )
 
     print(f"Train samples: {len(train_ds)}")

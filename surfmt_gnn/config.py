@@ -1,4 +1,14 @@
-"""Configuration for SurfMT-GNN."""
+"""Configuration for SurfMT-GNN.
+
+v8: Optimized for best performance building on v5 (our best at 0.62 test R²).
+Key improvements:
+- Multi-head AttentiveFP with edge features in ALL layers (v6 fix)
+- 4 GNN layers (deeper, since edge features now flow through all layers)
+- ReduceLROnPlateau scheduler (stable, proven in v5)
+- Stronger but balanced regularization
+- Wider task heads
+- LayerNorm on shared representation
+"""
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -24,7 +34,6 @@ class Config:
             "pC20",
         ]
     )
-    # CSV column name -> task index mapping
     csv_to_task: dict = field(
         default_factory=lambda: {
             "pCMC": 0,
@@ -37,33 +46,41 @@ class Config:
     )
 
     # ---- Task weights (masked MSE) ----
+    # Balanced: modest boost for scarce tasks, not too aggressive
     task_weights: torch.Tensor = field(
         default_factory=lambda: torch.tensor(
-            [1.0, 1.3, 1.5, 1.1, 1.3, 1.0], dtype=torch.float32
+            [1.0, 1.3, 1.8, 1.3, 1.3, 1.0], dtype=torch.float32
         )
     )
 
     # ---- Training ----
     batch_size: int = 32
     max_epochs: int = 500
-    patience: int = 80
-    lr: float = 5e-4
-    weight_decay: float = 1e-4
+    patience: int = 120
+    lr: float = 1.5e-4  # v8: balanced LR
+    weight_decay: float = 3e-4  # v8: balanced weight decay
     warmup_epochs: int = 10
     grad_clip_max_norm: float = 1.0
-    T_0: int = 50  # CosineAnnealingWarmRestarts first cycle
+
+    # Scheduler
+    # v8: reduce_on_plateau (most stable for small data)
+    scheduler_type: str = "reduce_on_plateau"
+    T_0: int = 100
     T_mult: int = 2
     eta_min: float = 1e-6
+    scheduler_patience: int = 25
+    scheduler_factor: float = 0.5
 
     # ---- Model: graph branch ----
+    # Multi-head AttentiveFP with edge features in all layers
     gnn_in_channels: int = 39
     gnn_edge_dim: int = 10
     gnn_hidden_dim: int = 256
     gnn_out_channels: int = 256
-    gnn_num_layers: int = 3
+    gnn_num_layers: int = 4  # v8: 4 layers (deeper, edge features now work properly)
     gnn_num_timesteps: int = 2
     gnn_num_heads: int = 4
-    gnn_dropout: float = 0.1
+    gnn_dropout: float = 0.15  # v8: moderate dropout
 
     # ---- Model: temperature branch ----
     temp_out_dim: int = 64
@@ -75,11 +92,12 @@ class Config:
     desc_hidden_dim: int = 32
 
     # ---- Model: fusion & shared ----
-    fusion_dropout: float = 0.2
+    fusion_dropout: float = 0.15  # v8: moderate
     shared_dim: int = 128
+    head_dropout: float = 0.15  # v8: dropout in task heads
 
     # ---- Model: task heads ----
-    head_hidden_dims: list = field(default_factory=lambda: [64, 32])
+    head_hidden_dims: list = field(default_factory=lambda: [128, 64])  # v8: wider heads
 
     # ---- Ensemble ----
     seeds: list = field(
@@ -93,8 +111,6 @@ class Config:
     num_workers: int = 0
 
     def __post_init__(self):
-        # Ensure project root is set correctly when data_dir is relative
         if not Path(self.data_dir).is_absolute():
-            # Assume data_dir is relative to project root (parent of surfmt_gnn/)
             project_root = Path(__file__).resolve().parent.parent
             self.data_dir = str(project_root / self.data_dir)
