@@ -60,6 +60,20 @@ class Trainer:
         self.criterion = masked_mse_loss
         self.task_weights = config.task_weights.to(device)
 
+        # Target scaler (for denormalizing predictions)
+        self.target_mean = None
+        self.target_std = None
+
+        # Try to infer target scaler from train dataset
+        # Handle both Dataset and Subset wrappers
+        train_ds = train_loader.dataset
+        if hasattr(train_ds, 'target_mean') and train_ds.target_mean is not None:
+            self.target_mean = torch.tensor(train_ds.target_mean, dtype=torch.float32, device=device)
+            self.target_std = torch.tensor(train_ds.target_std, dtype=torch.float32, device=device)
+        elif hasattr(train_ds, 'dataset') and hasattr(train_ds.dataset, 'target_mean'):
+            self.target_mean = torch.tensor(train_ds.dataset.target_mean, dtype=torch.float32, device=device)
+            self.target_std = torch.tensor(train_ds.dataset.target_std, dtype=torch.float32, device=device)
+
         # Training state
         self.best_val_loss = float("inf")
         self.epochs_no_improve = 0
@@ -80,6 +94,7 @@ class Trainer:
             batch = batch.to(self.device)
             self.optimizer.zero_grad()
 
+            # Model predicts normalized targets; loss uses normalized targets
             pred = self.model(batch)
             loss = self.criterion(pred, batch.y, batch.mask, self.task_weights)
 
@@ -96,38 +111,49 @@ class Trainer:
 
     @torch.no_grad()
     def validate(self) -> dict:
-        """Run validation and compute metrics.
+        """Run validation and compute metrics on original (denormalized) scale.
 
         Returns:
-            Dict with 'loss', per-task losses, and metrics (r2, rmse, mae).
+            Dict with 'loss' (normalized), and metrics (r2, rmse, mae) on original scale.
         """
         self.model.eval()
 
-        all_pred = []
-        all_target = []
+        all_pred_norm = []
+        all_target_raw = []
         all_mask = []
         total_loss = 0.0
         total_samples = 0
 
         for batch in self.val_loader:
             batch = batch.to(self.device)
-            pred = self.model(batch)
-            loss = self.criterion(pred, batch.y, batch.mask, self.task_weights)
+            pred_norm = self.model(batch)
 
+            # Loss on normalized targets
+            loss = self.criterion(pred_norm, batch.y, batch.mask, self.task_weights)
             total_loss += loss.item() * batch.num_graphs
             total_samples += batch.num_graphs
 
-            all_pred.append(pred.cpu().numpy())
-            all_target.append(batch.y.cpu().numpy())
+            # Denormalize predictions for metric computation
+            if self.target_mean is not None and self.target_std is not None:
+                pred_raw = pred_norm * self.target_std + self.target_mean
+            else:
+                pred_raw = pred_norm
+
+            all_pred_norm.append(pred_norm.cpu().numpy())
+            all_target_raw.append(batch.y_raw.cpu().numpy())
             all_mask.append(batch.mask.cpu().numpy())
 
-        all_pred = np.concatenate(all_pred, axis=0)
-        all_target = np.concatenate(all_target, axis=0)
+        all_pred_raw = np.concatenate(all_pred_norm, axis=0)
+        # If we have scalers, denormalize
+        if self.target_mean is not None and self.target_std is not None:
+            all_pred_raw = all_pred_raw * self.target_std.cpu().numpy() + self.target_mean.cpu().numpy()
+        all_target_raw = np.concatenate(all_target_raw, axis=0)
         all_mask = np.concatenate(all_mask, axis=0)
 
         avg_loss = total_loss / max(total_samples, 1)
 
-        metrics = compute_metrics(all_pred, all_target, all_mask, self.config.task_names)
+        # Metrics on original scale
+        metrics = compute_metrics(all_pred_raw, all_target_raw, all_mask, self.config.task_names)
         metrics["loss"] = avg_loss
 
         return metrics

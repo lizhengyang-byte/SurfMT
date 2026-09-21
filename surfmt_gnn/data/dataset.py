@@ -43,6 +43,8 @@ class SurfProDataset(InMemoryDataset):
         split: str = "train",
         desc_mean: np.ndarray = None,
         desc_std: np.ndarray = None,
+        target_mean: np.ndarray = None,
+        target_std: np.ndarray = None,
         transform=None,
         pre_transform=None,
     ):
@@ -53,6 +55,8 @@ class SurfProDataset(InMemoryDataset):
             split: 'train' or 'test'.
             desc_mean: Descriptor mean (12,), required for test split.
             desc_std: Descriptor std (12,), required for test split.
+            target_mean: Target mean (6,), required for test split.
+            target_std: Target std (6,), required for test split.
             transform: PyG transform.
             pre_transform: PyG pre_transform.
         """
@@ -60,11 +64,30 @@ class SurfProDataset(InMemoryDataset):
         self.csv_path = Path(csv_path) if csv_path else None
         self.desc_mean = desc_mean
         self.desc_std = desc_std
+        self.target_mean = target_mean
+        self.target_std = target_std
 
-        # For train split, we compute desc_mean/std inside process()
+        # For train split, we compute desc_mean/std and target_mean/std inside process()
         # We'll store them as attributes after processing
         super().__init__(root, transform, pre_transform)
         self.load(self.processed_paths[0])
+
+        # After loading (from cache or fresh process), ensure scaler attributes are set
+        # If process() was not called (loaded from cache), load scaler from saved file
+        if self.desc_mean is None or self.target_mean is None:
+            scaler_path = Path(self.processed_dir) / f"scaler_{self.split}.pt"
+            if scaler_path.exists():
+                scaler = torch.load(scaler_path, weights_only=False)
+                if self.desc_mean is None and "desc_mean" in scaler:
+                    self.desc_mean = scaler["desc_mean"].numpy()
+                if self.desc_std is None and "desc_std" in scaler:
+                    self.desc_std = scaler["desc_std"].numpy()
+                if self.target_mean is None and "target_mean" in scaler:
+                    self.target_mean = scaler["target_mean"].numpy()
+                if self.target_std is None and "target_std" in scaler:
+                    self.target_std = scaler["target_std"].numpy()
+                if "type_map" in scaler:
+                    self.type_map = scaler["type_map"]
 
     @property
     def raw_file_names(self):
@@ -101,6 +124,28 @@ class SurfProDataset(InMemoryDataset):
         self.desc_mean = np.asarray(self.desc_mean, dtype=np.float32)
         self.desc_std = np.asarray(self.desc_std, dtype=np.float32)
 
+        # ---- Fit target scaler on train split (Z-score normalization) ----
+        # This is essential for multi-task learning with different magnitude targets
+        if self.split == "train":
+            target_vals = []
+            for col in CSV_PROP_COLS:
+                vals = df[col].dropna().values
+                target_vals.append(vals)
+            self.target_mean = np.array(
+                [np.mean(v) for v in target_vals], dtype=np.float32
+            )
+            self.target_std = np.array(
+                [np.std(v).clip(min=1e-8) for v in target_vals], dtype=np.float32
+            )
+        else:
+            # For test split, target_mean/std should be passed in
+            if not hasattr(self, 'target_mean') or self.target_mean is None:
+                self.target_mean = np.zeros(6, dtype=np.float32)
+                self.target_std = np.ones(6, dtype=np.float32)
+            else:
+                self.target_mean = np.asarray(self.target_mean, dtype=np.float32)
+                self.target_std = np.asarray(self.target_std, dtype=np.float32)
+
         # Build surfactant type mapping
         if "type" in df.columns:
             types = sorted(df["type"].unique().tolist())
@@ -132,16 +177,20 @@ class SurfProDataset(InMemoryDataset):
             desc_norm = (desc - self.desc_mean) / self.desc_std
 
             # Targets and mask (6 tasks) - store as [1, 6] so PyG batch stacks to [B, 6]
-            y = np.zeros((1, 6), dtype=np.float32)
+            y_raw = np.zeros((1, 6), dtype=np.float32)
             mask = np.zeros((1, 6), dtype=np.float32)
             for task_idx, col in enumerate(CSV_PROP_COLS):
                 val = row.get(col, np.nan)
                 if pd.notna(val):
-                    y[0, task_idx] = float(val)
+                    y_raw[0, task_idx] = float(val)
                     mask[0, task_idx] = 1.0
                 else:
-                    y[0, task_idx] = 0.0
+                    y_raw[0, task_idx] = 0.0
                     mask[0, task_idx] = 0.0
+
+            # Normalize targets (Z-score) for stable multi-task training
+            y_norm = (y_raw - self.target_mean) / self.target_std
+            y = y_norm * mask  # zero out missing entries
 
             # Surfactant type
             mol_type = 0
@@ -158,7 +207,8 @@ class SurfProDataset(InMemoryDataset):
                 temp_norm=torch.tensor([temp_norm], dtype=torch.float32),
                 temp_mask=torch.tensor([temp_mask], dtype=torch.float32),
                 descriptors=torch.from_numpy(desc_norm),
-                y=torch.from_numpy(y),
+                y=torch.from_numpy(y),  # normalized targets
+                y_raw=torch.from_numpy(y_raw),  # original targets
                 mask=torch.from_numpy(mask),
                 smiles=smi,
                 mol_type=torch.tensor([mol_type], dtype=torch.long),
@@ -179,6 +229,8 @@ class SurfProDataset(InMemoryDataset):
             {
                 "desc_mean": torch.from_numpy(self.desc_mean),
                 "desc_std": torch.from_numpy(self.desc_std),
+                "target_mean": torch.from_numpy(self.target_mean),
+                "target_std": torch.from_numpy(self.target_std),
                 "type_map": self.type_map,
             },
             scaler_path,

@@ -65,6 +65,8 @@ def main():
         split="test",
         desc_mean=train_ds.desc_mean,
         desc_std=train_ds.desc_std,
+        target_mean=train_ds.target_mean,
+        target_std=train_ds.target_std,
     )
 
     print(f"Train samples: {len(train_ds)}")
@@ -129,12 +131,17 @@ def main():
     all_target = []
     all_mask = []
 
+    target_mean = torch.tensor(train_ds.target_mean, dtype=torch.float32, device=config.device)
+    target_std = torch.tensor(train_ds.target_std, dtype=torch.float32, device=config.device)
+
     with torch.no_grad():
         for batch in test_loader:
             batch = batch.to(config.device)
-            pred = model(batch)
-            all_pred.append(pred.cpu().numpy())
-            all_target.append(batch.y.cpu().numpy())
+            pred_norm = model(batch)
+            # Denormalize
+            pred_raw = pred_norm * target_std + target_mean
+            all_pred.append(pred_raw.cpu().numpy())
+            all_target.append(batch.y_raw.cpu().numpy())
             all_mask.append(batch.mask.cpu().numpy())
 
     all_pred = np.concatenate(all_pred, axis=0)
