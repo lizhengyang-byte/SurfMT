@@ -52,8 +52,22 @@ class SurfMTGNN(nn.Module):
             dropout=0.0,
         )
 
-        # ---- Fusion: 384 -> 256, dropout=0.2 ----
+        # ---- Branch 4: Fingerprint encoder MLP (2048 -> 256 -> 128, ReLU) ----
+        self.use_fingerprint = getattr(config, 'use_fingerprint', False)
+        if self.use_fingerprint:
+            self.fp_encoder = MLP(
+                hidden_dims=[config.fp_dim, config.fp_hidden_dim, config.fp_out_dim],
+                activation="relu",
+                dropout=config.fp_dropout,
+            )
+        else:
+            self.fp_encoder = None
+            config.fp_out_dim = 0
+
+        # ---- Fusion: concat of all branches -> 256, dropout ----
         fusion_in = config.gnn_out_channels + config.temp_out_dim + config.desc_out_dim
+        if self.use_fingerprint:
+            fusion_in += config.fp_out_dim
         self.fusion_mlp = MLP(
             hidden_dims=[fusion_in, config.gnn_out_channels],
             activation="relu",
@@ -112,8 +126,20 @@ class SurfMTGNN(nn.Module):
             desc = desc.view(-1, self.config.num_descriptors)
         z_desc = self.desc_encoder(desc)  # [batch_size, 64]
 
+        # ---- Fingerprint branch ----
+        if self.use_fingerprint and self.fp_encoder is not None:
+            fp = data.fingerprint
+            if fp.dim() == 1:
+                fp = fp.view(-1, self.config.fp_dim)
+            z_fp = self.fp_encoder(fp)  # [batch_size, fp_out_dim]
+        else:
+            z_fp = None
+
         # ---- Fusion ----
-        z_concat = torch.cat([z_graph, z_temp, z_desc], dim=-1)  # [batch_size, 384]
+        if z_fp is not None:
+            z_concat = torch.cat([z_graph, z_temp, z_desc, z_fp], dim=-1)
+        else:
+            z_concat = torch.cat([z_graph, z_temp, z_desc], dim=-1)
         z_fused = self.fusion_mlp(z_concat)  # [batch_size, 256]
         z_shared = F.relu(self.shared_norm(self.shared_layer(z_fused)))  # [batch_size, 128]
 

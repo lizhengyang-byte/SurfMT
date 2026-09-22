@@ -9,6 +9,7 @@ from torch_geometric.data import InMemoryDataset, Data
 
 from .featurizer import smiles_to_graph
 from .descriptors import compute_descriptors, fit_descriptor_scaler
+from .fingerprints import compute_morgan_fp
 
 
 # Property column name in CSV -> task index
@@ -27,10 +28,14 @@ class SurfProDataset(InMemoryDataset):
 
     Each sample contains:
       - x, edge_index, edge_attr: molecular graph
-      - temp_norm: normalized temperature (T - 25) / 35
+      - temp_norm: Z-score normalized temperature
+      - temp_raw: raw temperature value (0.0 if missing)
       - temp_mask: 1 if temperature is present, 0 if missing
       - descriptors: 12-dim Z-score normalized RDKit descriptors
-      - y: 6-dim target vector (NaN entries are set to 0, mask handles them)
+      - desc_raw: 12-dim raw (unnormalized) RDKit descriptors
+      - desc_valid: 12-dim binary mask (1=computed ok, 0=failed/mean-filled)
+      - y: 6-dim normalized target vector (missing entries are 0, mask handles them)
+      - y_raw: 6-dim original (unnormalized) target vector
       - mask: 6-dim binary mask (1=present, 0=missing)
       - smiles: SMILES string (stored as list[str] in PyG)
       - mol_type: surfactant type index
@@ -80,7 +85,7 @@ class SurfProDataset(InMemoryDataset):
 
         # After loading (from cache or fresh process), ensure scaler attributes are set
         # If process() was not called (loaded from cache), load scaler from saved file
-        if self.desc_mean is None or self.target_mean is None or not hasattr(self, 'temp_mean'):
+        if self.desc_mean is None or self.target_mean is None or not hasattr(self, 'temp_mean') or self.temp_mean is None:
             scaler_path = Path(self.processed_dir) / f"scaler_{self.split}.pt"
             if scaler_path.exists():
                 scaler = torch.load(scaler_path, weights_only=False)
@@ -134,23 +139,28 @@ class SurfProDataset(InMemoryDataset):
         self.desc_mean = np.asarray(self.desc_mean, dtype=np.float32)
         self.desc_std = np.asarray(self.desc_std, dtype=np.float32)
 
-        # ---- Fit temperature scaler on train split ----
-        # Paper uses (T - 25) / 35 normalization.
-        # We also support Z-score via temp_mean/temp_std parameters.
-        # Default: paper's (T-25)/35 normalization for reproducibility.
+        # ---- Fit temperature scaler on train split (Z-score from data) ----
+        # Use actual training data statistics for proper signal scaling.
         if self.split == "train":
-            self.temp_mean = 25.0
-            self.temp_std = 35.0  # (T-25)/35 normalization from paper
+            temp_vals = df["temp"].dropna().values if "temp" in df.columns else np.array([25.0])
+            if len(temp_vals) < 2:
+                self.temp_mean = 25.0
+                self.temp_std = 35.0
+            else:
+                self.temp_mean = float(np.mean(temp_vals))
+                # Use sample std (ddof=1)
+                self.temp_std = float(np.std(temp_vals, ddof=1).clip(min=1e-8))
         else:
             if not hasattr(self, 'temp_mean') or self.temp_mean is None:
                 self.temp_mean = 25.0
-                self.temp_std = 35.0
+                self.temp_std = 1.0
             else:
                 self.temp_mean = float(self.temp_mean)
                 self.temp_std = float(self.temp_std)
 
         # ---- Fit target scaler on train split (Z-score normalization) ----
-        # This is essential for multi-task learning with different magnitude targets
+        # This is essential for multi-task learning with different magnitude targets.
+        # Uses sample standard deviation (ddof=1).
         if self.split == "train":
             target_vals = []
             for col in CSV_PROP_COLS:
@@ -160,7 +170,7 @@ class SurfProDataset(InMemoryDataset):
                 [np.mean(v) for v in target_vals], dtype=np.float32
             )
             self.target_std = np.array(
-                [np.std(v).clip(min=1e-8) for v in target_vals], dtype=np.float32
+                [np.std(v, ddof=1).clip(min=1e-8) for v in target_vals], dtype=np.float32
             )
         else:
             # For test split, target_mean/std should be passed in
@@ -188,18 +198,33 @@ class SurfProDataset(InMemoryDataset):
             # Graph features
             x, edge_index, edge_attr = smiles_to_graph(smi)
 
-            # Temperature - Z-score normalized (stronger signal than (T-25)/35)
-            temp_raw = row.get("temp", np.nan)
-            if pd.isna(temp_raw):
+            # Temperature - Z-score normalized
+            temp_raw_val = row.get("temp", np.nan)
+            if pd.isna(temp_raw_val):
+                temp_raw = 0.0
                 temp_norm = 0.0
                 temp_mask = 0
             else:
-                temp_norm = (float(temp_raw) - self.temp_mean) / self.temp_std
+                temp_raw = float(temp_raw_val)
+                temp_norm = (temp_raw - self.temp_mean) / self.temp_std
                 temp_mask = 1
 
-            # Descriptors (Z-score normalized)
-            desc = compute_descriptors(mol).astype(np.float32)
-            desc_norm = (desc - self.desc_mean) / self.desc_std
+            # Descriptors (raw + normalized)
+            # compute_descriptors returns (values, valid_mask)
+            desc_raw_arr, desc_valid_arr = compute_descriptors(mol)
+            desc_raw_arr = desc_raw_arr.astype(np.float32)
+            desc_valid_arr = desc_valid_arr.astype(np.float32)
+
+            # Morgan fingerprint (ECFP4, 2048-bit)
+            fp_arr = compute_morgan_fp(mol, radius=2, n_bits=2048)
+
+            # Fill failed descriptors with training set mean (so normalized value = 0)
+            # This is more reasonable than filling with 0, which could be far from the distribution.
+            desc_filled = desc_raw_arr.copy()
+            desc_filled[desc_valid_arr == 0] = self.desc_mean[desc_valid_arr == 0]
+
+            # Z-score normalize
+            desc_norm = (desc_filled - self.desc_mean) / self.desc_std
 
             # Targets and mask (6 tasks) - store as [1, 6] so PyG batch stacks to [B, 6]
             y_raw = np.zeros((1, 6), dtype=np.float32)
@@ -230,8 +255,12 @@ class SurfProDataset(InMemoryDataset):
                 edge_index=torch.from_numpy(edge_index),
                 edge_attr=torch.from_numpy(edge_attr),
                 temp_norm=torch.tensor([temp_norm], dtype=torch.float32),
+                temp_raw=torch.tensor([temp_raw], dtype=torch.float32),
                 temp_mask=torch.tensor([temp_mask], dtype=torch.float32),
-                descriptors=torch.from_numpy(desc_norm),
+                descriptors=torch.from_numpy(desc_norm.astype(np.float32)),
+                desc_raw=torch.from_numpy(desc_raw_arr),
+                desc_valid=torch.from_numpy(desc_valid_arr),
+                fingerprint=torch.from_numpy(fp_arr),
                 y=torch.from_numpy(y),  # normalized targets
                 y_raw=torch.from_numpy(y_raw),  # original targets
                 mask=torch.from_numpy(mask),

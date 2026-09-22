@@ -4,7 +4,7 @@ Loads all 60 models (6 seeds x 10 folds), collects predictions,
 computes ensemble mean/std, and evaluates uncertainty metrics.
 
 Usage:
-    python scripts/evaluate_ensemble.py --ensemble_dir outputs/ensemble --output_dir outputs/eval
+    python surfmt_gnn/scripts/evaluate_ensemble.py --ensemble_dir outputs/ensemble --output_dir outputs/eval
 """
 import argparse
 import json
@@ -17,7 +17,7 @@ import torch
 from torch_geometric.loader import DataLoader
 from scipy import stats
 
-project_root = Path(__file__).resolve().parent.parent
+project_root = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from surfmt_gnn.config import Config

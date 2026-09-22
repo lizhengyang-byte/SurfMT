@@ -49,16 +49,19 @@ SurfMT-GNN — a PyTorch implementation of a multi-task graph neural network for
 pip install -r requirements.txt
 
 # Single model train + test evaluation (quickest feedback)
-python scripts/train_single.py --seed 42 --output_dir outputs/single_seed42
+python surfmt_gnn/scripts/train_single.py --seed 42 --output_dir outputs/single_seed42
 
 # 10-fold cross-validation (uses pre-defined `fold` column in CSV)
-python scripts/train_cv.py --output_dir outputs/cv_seed42
+python surfmt_gnn/scripts/train_cv.py --output_dir outputs/cv_seed42
 
 # Full deep ensemble (6 seeds × 10 folds = 60 models)
-python scripts/train_ensemble.py --output_dir outputs/ensemble
+python surfmt_gnn/scripts/train_ensemble.py --output_dir outputs/ensemble
 
 # Evaluate ensemble with uncertainty (coverage, Spearman, error ratio)
-python scripts/evaluate_ensemble.py --ensemble_dir outputs/ensemble --output_dir outputs/eval
+python surfmt_gnn/scripts/evaluate_ensemble.py --ensemble_dir outputs/ensemble --output_dir outputs/eval
+
+# LightGBM baseline (per-task regressors)
+python surfmt_lgb/main.py --seed 42 --output_dir outputs/lgb_seed42
 ```
 
 All scripts are run from the project root. There is no build step, no lint config, and no test suite — this is a research codebase.
@@ -70,7 +73,10 @@ All scripts are run from the project root. There is no build step, no lint confi
 - **Model forward pass**: `surfmt_gnn/models/surfmt_gnn.py` — the 3-branch architecture.
 - **Training loop**: `surfmt_gnn/training/trainer.py` — Trainer class with early stopping on `avg_r2`.
 - **Loss**: `surfmt_gnn/training/loss.py` — `masked_mse_loss(pred, target, mask, task_weights)`.
-- **Scripts**: `scripts/` — thin entry points that wire config, data, model, and trainer together.
+- **Scripts**: `surfmt_gnn/scripts/` — GNN entry points that wire config, data, model, and trainer together.
+- **LightGBM baseline**: `surfmt_lgb/` — self-contained per-task LightGBM regressors (entry point: `surfmt_lgb/main.py`).
+
+Each model lives in its own top-level folder containing all of its code and its own scripts, so a new model drops in as a new self-contained folder under the project root. `outputs/` is the log/result archive (kept unchanged).
 
 ## Data Caching
 

@@ -1,6 +1,6 @@
-# SurfMT-GNN: 多任务图神经网络表面活性剂性质预测
+# SurfMT: 表面活性剂关键界面性质多任务预测
 
-基于论文 *Multi-task graph neural networks for comprehensive surfactant property prediction* (Digital Discovery, 2026) 的 PyTorch 实现。
+SurfMT 是一个表面活性剂界面性质预测项目，除主模型 **SurfMT-GNN**（基于论文 *Multi-task graph neural networks for comprehensive surfactant property prediction*, Digital Discovery 2026 的 PyTorch 实现）外，还提供 LightGBM、Random Forest 等逐任务回归基线，便于横向对比。
 
 ## 项目概述
 
@@ -50,31 +50,52 @@ pip install -r requirements.txt
 
 ## 使用方法
 
-### 单模型训练与评估
+### SurfMT-GNN 单模型训练与评估
 
 ```bash
-python scripts/train_single.py --seed 42 --output_dir outputs/single_seed42
+python surfmt_gnn/scripts/train_single.py --seed 42 --output_dir outputs/single_seed42
 ```
 
-### 10 折交叉验证
+### SurfMT-GNN 10 折交叉验证
 
 ```bash
-python scripts/train_cv.py --seed 42 --output_dir outputs/cv_seed42
+python surfmt_gnn/scripts/train_cv.py --seed 42 --output_dir outputs/cv_seed42
 ```
 
-### 完整集成训练（6 种子 × 10 折 = 60 模型）
+### SurfMT-GNN 完整集成训练（6 种子 × 10 折 = 60 模型）
 
 ```bash
-python scripts/train_ensemble.py --output_dir outputs/ensemble
+python surfmt_gnn/scripts/train_ensemble.py --output_dir outputs/ensemble
 ```
 
-### 集成评估与不确定性量化
+### SurfMT-GNN 集成评估与不确定性量化
 
 ```bash
-python scripts/evaluate_ensemble.py --ensemble_dir outputs/ensemble --output_dir outputs/eval
+python surfmt_gnn/scripts/evaluate_ensemble.py --ensemble_dir outputs/ensemble --output_dir outputs/eval
 ```
 
-## 训练配置
+### 树模型基线（表格特征 + 逐任务回归）
+
+树模型不依赖分子图结构，仅用 SMILES + 温度 + 12 描述符计算出的表格特征，
+每个任务单独训练一个回归器，掩码处理缺失标签。
+
+**LightGBM 基线（CV 选取最优 boosting 轮数）：**
+
+```bash
+python surfmt_lgb/main.py --seed 42 --output_dir outputs/lgb_seed42
+python surfmt_lgb/main.py --hetero --output_dir outputs/lgb_hetero      # 异构集成
+```
+
+**Random Forest 基线（CV 选取最优树数）：**
+
+```bash
+python surfmt_rf/main.py --seed 42 --output_dir outputs/rf_seed42
+python surfmt_rf/main.py --hetero --output_dir outputs/rf_hetero       # 异构集成
+```
+
+两种基线都支持 `--seeds 42,123,456` 多种子平均集成。
+
+## SurfMT-GNN 训练配置
 
 - 优化器：AdamW（lr=5e-4, weight_decay=1e-4）
 - 学习率：warmup 10 轮 + 余弦退火热重启
@@ -86,13 +107,18 @@ python scripts/evaluate_ensemble.py --ensemble_dir outputs/ensemble --output_dir
 
 ## 项目结构
 
+每种模型一个顶层文件夹，自包含全部代码与运行脚本；`outputs/` 为日志与结果存档。
+
 ```
-├── data/surfpro/              # 数据集
-├── surfmt_gnn/                # 核心包
+├── data/surfpro/              # 数据集（各模型共享）
+├── surfmt_gnn/                # SurfMT-GNN（PyTorch 多任务图神经网络）
+│   ├── __init__.py
 │   ├── config.py              # 超参数配置
 │   ├── data/                  # 数据模块
 │   │   ├── featurizer.py      # 原子/键特征编码 (39/10-dim)
 │   │   ├── descriptors.py     # RDKit 描述符
+│   │   ├── fingerprints.py    # Morgan 指纹
+│   │   ├── utils.py           # 缩放器工具
 │   │   └── dataset.py         # PyG 数据集
 │   ├── models/                # 模型模块
 │   │   ├── modules.py         # MLP 通用模块
@@ -104,13 +130,26 @@ python scripts/evaluate_ensemble.py --ensemble_dir outputs/ensemble --output_dir
 │   │   └── trainer.py         # 训练器
 │   ├── evaluation/
 │   │   └── metrics.py         # R²/RMSE/MAE
-│   └── utils/
-│       └── seed.py            # 随机种子
-├── scripts/                   # 运行脚本
-│   ├── train_single.py
-│   ├── train_cv.py
-│   ├── train_ensemble.py
-│   └── evaluate_ensemble.py
+│   ├── utils/
+│   │   └── seed.py            # 随机种子
+│   └── scripts/               # 运行脚本
+│       ├── train_single.py
+│       ├── train_cv.py
+│       ├── train_ensemble.py
+│       └── evaluate_ensemble.py
+├── surfmt_lgb/                # SurfMT-LightGBM 基线（逐任务回归）
+│   ├── features.py            # 特征提取 (ECFP4/6 + MACCS + 描述符 + 温度)
+│   ├── data.py                # CSV 加载、缺失掩码、折划分
+│   ├── train.py               # 逐任务 LightGBM 训练与早停
+│   ├── metrics.py             # 掩码 R²/RMSE/MAE
+│   └── main.py                # 端到端入口
+├── surfmt_rf/                 # SurfMT-RandomForest 基线（逐任务回归）
+│   ├── features.py            # 特征提取 (同 surfmt_lgb)
+│   ├── data.py                # CSV 加载、缺失掩码、折划分
+│   ├── train.py               # 逐任务 RandomForest 训练（CV 选树数）
+│   ├── metrics.py             # 掩码 R²/RMSE/MAE
+│   └── main.py                # 端到端入口
+├── outputs/                   # 日志与结果存档（每个模型输出）
 └── requirements.txt
 ```
 

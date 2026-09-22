@@ -63,7 +63,7 @@ class Config:
     grad_clip_max_norm: float = 1.0
 
     # Scheduler
-    # v8: reduce_on_plateau (most stable for small data)
+    # reduce_on_plateau: proven stable baseline scheduler
     scheduler_type: str = "reduce_on_plateau"
     T_0: int = 100
     T_mult: int = 2
@@ -90,6 +90,13 @@ class Config:
     num_descriptors: int = 12
     desc_out_dim: int = 64
     desc_hidden_dim: int = 32
+
+    # ---- Model: fingerprint branch ----
+    use_fingerprint: bool = True
+    fp_dim: int = 2048
+    fp_hidden_dim: int = 256
+    fp_out_dim: int = 128
+    fp_dropout: float = 0.3
 
     # ---- Model: fusion & shared ----
     fusion_dropout: float = 0.15  # v8: moderate

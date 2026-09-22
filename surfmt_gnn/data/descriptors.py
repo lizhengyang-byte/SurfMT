@@ -27,86 +27,132 @@ DESCRIPTOR_NAMES = [
 ]
 
 
-def compute_descriptors(mol: Chem.Mol) -> np.ndarray:
+def compute_descriptors(mol: Chem.Mol) -> tuple:
     """Compute 12 RDKit descriptors for a molecule.
 
     Args:
         mol: RDKit Mol object.
 
     Returns:
-        np.ndarray of shape (12,), dtype float64.
-        NaN values (e.g. BalabanJ failure) are replaced with 0.
+        Tuple of (desc_array, valid_mask):
+          - desc_array: np.ndarray of shape (12,), dtype float64.
+            Failed descriptors are filled with 0.0 (use valid_mask to identify).
+          - valid_mask: np.ndarray of shape (12,), dtype bool.
+            True = computed successfully, False = failed / NaN.
     """
     vals = []
+    valid = []
     # MolLogP
     try:
-        vals.append(Descriptors.MolLogP(mol))
+        v = Descriptors.MolLogP(mol)
+        vals.append(v)
+        valid.append(not np.isnan(v))
     except Exception:
         vals.append(0.0)
+        valid.append(False)
     # TPSA
     try:
-        vals.append(Descriptors.TPSA(mol))
+        v = Descriptors.TPSA(mol)
+        vals.append(v)
+        valid.append(not np.isnan(v))
     except Exception:
         vals.append(0.0)
+        valid.append(False)
     # MolWt
     try:
-        vals.append(Descriptors.MolWt(mol))
+        v = Descriptors.MolWt(mol)
+        vals.append(v)
+        valid.append(not np.isnan(v))
     except Exception:
         vals.append(0.0)
+        valid.append(False)
     # NumRotatableBonds
     try:
-        vals.append(Descriptors.NumRotatableBonds(mol))
+        v = Descriptors.NumRotatableBonds(mol)
+        vals.append(v)
+        valid.append(not np.isnan(v))
     except Exception:
         vals.append(0.0)
+        valid.append(False)
     # NumHAcceptors
     try:
-        vals.append(Lipinski.NumHAcceptors(mol))
+        v = Lipinski.NumHAcceptors(mol)
+        vals.append(v)
+        valid.append(not np.isnan(v))
     except Exception:
         vals.append(0.0)
+        valid.append(False)
     # NumHDonors
     try:
-        vals.append(Lipinski.NumHDonors(mol))
+        v = Lipinski.NumHDonors(mol)
+        vals.append(v)
+        valid.append(not np.isnan(v))
     except Exception:
         vals.append(0.0)
+        valid.append(False)
     # NumAromaticRings
     try:
-        vals.append(rdMolDescriptors.CalcNumAromaticRings(mol))
+        v = rdMolDescriptors.CalcNumAromaticRings(mol)
+        vals.append(v)
+        valid.append(not np.isnan(v))
     except Exception:
         vals.append(0.0)
+        valid.append(False)
     # FractionCSP3
     try:
-        vals.append(rdMolDescriptors.CalcFractionCSP3(mol))
+        v = rdMolDescriptors.CalcFractionCSP3(mol)
+        vals.append(v)
+        valid.append(not np.isnan(v))
     except Exception:
         vals.append(0.0)
+        valid.append(False)
     # NumHeteroatoms
     try:
-        vals.append(Lipinski.NumHeteroatoms(mol))
+        v = Lipinski.NumHeteroatoms(mol)
+        vals.append(v)
+        valid.append(not np.isnan(v))
     except Exception:
         vals.append(0.0)
+        valid.append(False)
     # LabuteASA
     try:
-        vals.append(rdMolDescriptors.CalcLabuteASA(mol))
+        v = rdMolDescriptors.CalcLabuteASA(mol)
+        vals.append(v)
+        valid.append(not np.isnan(v))
     except Exception:
         vals.append(0.0)
+        valid.append(False)
     # BalabanJ
     try:
-        vals.append(Descriptors.BalabanJ(mol))
+        v = Descriptors.BalabanJ(mol)
+        vals.append(v)
+        valid.append(not np.isnan(v))
     except Exception:
         vals.append(0.0)
+        valid.append(False)
     # BertzCT
     try:
-        vals.append(Descriptors.BertzCT(mol))
+        v = Descriptors.BertzCT(mol)
+        vals.append(v)
+        valid.append(not np.isnan(v))
     except Exception:
         vals.append(0.0)
+        valid.append(False)
 
     arr = np.array(vals, dtype=np.float64)
-    # Replace any NaN with 0
-    arr = np.where(np.isnan(arr), 0.0, arr)
-    return arr
+    mask = np.array(valid, dtype=bool)
+    # Replace any NaN with 0 and mark as invalid
+    nan_mask = np.isnan(arr)
+    if nan_mask.any():
+        arr = np.where(nan_mask, 0.0, arr)
+        mask = mask & ~nan_mask
+    return arr, mask
 
 
 def fit_descriptor_scaler(smiles_list: list) -> tuple:
     """Fit Z-score scaler on a list of SMILES.
+
+    Only successfully computed descriptor values are used for mean/std.
 
     Args:
         smiles_list: List of SMILES strings.
@@ -114,15 +160,29 @@ def fit_descriptor_scaler(smiles_list: list) -> tuple:
     Returns:
         Tuple of (mean, std), each np.ndarray of shape (12,).
         std is clamped to minimum of 1e-8 to avoid division by zero.
+        Uses sample standard deviation (ddof=1).
     """
     all_desc = []
+    all_valid = []
     for smi in smiles_list:
         mol = Chem.MolFromSmiles(smi)
         if mol is None:
             continue
-        all_desc.append(compute_descriptors(mol))
+        desc, valid = compute_descriptors(mol)
+        all_desc.append(desc)
+        all_valid.append(valid)
     all_desc = np.stack(all_desc, axis=0)  # (N, 12)
-    mean = np.mean(all_desc, axis=0)
-    std = np.std(all_desc, axis=0)
+    all_valid = np.stack(all_valid, axis=0)  # (N, 12)
+
+    mean = np.zeros(12, dtype=np.float64)
+    std = np.zeros(12, dtype=np.float64)
+    for i in range(12):
+        vals = all_desc[all_valid[:, i], i]
+        if len(vals) < 2:
+            mean[i] = 0.0
+            std[i] = 1.0
+        else:
+            mean[i] = np.mean(vals)
+            std[i] = np.std(vals, ddof=1)
     std = np.clip(std, a_min=1e-8, a_max=None)
     return mean.astype(np.float32), std.astype(np.float32)

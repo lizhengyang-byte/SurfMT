@@ -1,7 +1,7 @@
 """Train full deep ensemble: 10-fold CV x 6 seeds = 60 models.
 
 Usage:
-    python scripts/train_ensemble.py --output_dir outputs/ensemble
+    python surfmt_gnn/scripts/train_ensemble.py --output_dir outputs/ensemble
 """
 import argparse
 import json
@@ -9,7 +9,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-project_root = Path(__file__).resolve().parent.parent
+# Add project root to path (script lives at surfmt_gnn/scripts/, so go up 3 levels)
+project_root = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from surfmt_gnn.config import Config
@@ -52,10 +53,10 @@ def main():
 
         seed_dir = Path(args.output_dir) / f"seed_{seed}"
 
-        # Build command
+        # Build command (train_cv.py now lives in the model's scripts folder)
         cmd = [
             sys.executable,
-            str(project_root / "scripts" / "train_cv.py"),
+            str(project_root / "surfmt_gnn" / "scripts" / "train_cv.py"),
             "--seed", str(seed),
             "--output_dir", str(seed_dir),
             "--folds", args.folds,

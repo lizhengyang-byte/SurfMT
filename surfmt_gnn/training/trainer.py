@@ -31,7 +31,22 @@ class Trainer:
         config,
         device: str = "cuda",
         save_dir: str = "outputs/exp01",
+        target_mean: np.ndarray = None,
+        target_std: np.ndarray = None,
     ):
+        """
+        Args:
+            model: PyTorch model.
+            train_loader: Training data loader.
+            val_loader: Validation data loader.
+            config: Config object.
+            device: 'cuda' or 'cpu'.
+            save_dir: Directory to save checkpoints and logs.
+            target_mean: Optional target mean (6,) for denormalization.
+                If None, inferred from train dataset.
+            target_std: Optional target std (6,) for denormalization.
+                If None, inferred from train dataset.
+        """
         self.model = model.to(device)
         self.train_loader = train_loader
         self.val_loader = val_loader
@@ -66,18 +81,25 @@ class Trainer:
         self.task_weights = config.task_weights.to(device)
 
         # Target scaler (for denormalizing predictions)
+        # Priority: explicit argument > train dataset attribute
         self.target_mean = None
         self.target_std = None
 
-        # Try to infer target scaler from train dataset
-        # Handle both Dataset and Subset wrappers
-        train_ds = train_loader.dataset
-        if hasattr(train_ds, 'target_mean') and train_ds.target_mean is not None:
-            self.target_mean = torch.tensor(train_ds.target_mean, dtype=torch.float32, device=device)
-            self.target_std = torch.tensor(train_ds.target_std, dtype=torch.float32, device=device)
-        elif hasattr(train_ds, 'dataset') and hasattr(train_ds.dataset, 'target_mean'):
-            self.target_mean = torch.tensor(train_ds.dataset.target_mean, dtype=torch.float32, device=device)
-            self.target_std = torch.tensor(train_ds.dataset.target_std, dtype=torch.float32, device=device)
+        if target_mean is not None and target_std is not None:
+            self.target_mean = torch.tensor(np.asarray(target_mean, dtype=np.float32),
+                                            dtype=torch.float32, device=device)
+            self.target_std = torch.tensor(np.asarray(target_std, dtype=np.float32),
+                                           dtype=torch.float32, device=device)
+        else:
+            # Try to infer target scaler from train dataset
+            # Handle both Dataset and Subset wrappers
+            train_ds = train_loader.dataset
+            if hasattr(train_ds, 'target_mean') and train_ds.target_mean is not None:
+                self.target_mean = torch.tensor(train_ds.target_mean, dtype=torch.float32, device=device)
+                self.target_std = torch.tensor(train_ds.target_std, dtype=torch.float32, device=device)
+            elif hasattr(train_ds, 'dataset') and hasattr(train_ds.dataset, 'target_mean'):
+                self.target_mean = torch.tensor(train_ds.dataset.target_mean, dtype=torch.float32, device=device)
+                self.target_std = torch.tensor(train_ds.dataset.target_std, dtype=torch.float32, device=device)
 
         # Training state
         self.best_val_loss = float("inf")

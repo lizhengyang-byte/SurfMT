@@ -3,8 +3,12 @@
 Uses the 'fold' column in surfpro_train.csv for pre-defined splits.
 Trains one model per fold and saves results.
 
+Each fold computes its own scaler (target/descriptor/temperature) from the
+training fold only, then rescales both train and val data — this avoids
+scaler data leakage between train and validation.
+
 Usage:
-    python scripts/train_cv.py --seed 42 --output_dir outputs/cv_seed42
+    python surfmt_gnn/scripts/train_cv.py --seed 42 --output_dir outputs/gnn_seed42
 """
 import argparse
 import json
@@ -13,13 +17,16 @@ from pathlib import Path
 
 import numpy as np
 import torch
+from torch_geometric.data import Dataset
 from torch_geometric.loader import DataLoader
 
-project_root = Path(__file__).resolve().parent.parent
+# Add project root to path (script lives at surfmt_gnn/scripts/, so go up 3 levels)
+project_root = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from surfmt_gnn.config import Config
 from surfmt_gnn.data.dataset import SurfProDataset
+from surfmt_gnn.data.utils import compute_scaler_from_subset, rescale_dataset
 from surfmt_gnn.models.surfmt_gnn import SurfMTGNN
 from surfmt_gnn.training.trainer import Trainer
 from surfmt_gnn.evaluation.metrics import compute_metrics
@@ -55,7 +62,7 @@ def main():
     print(f"Folds to run: {folds_to_run}")
     print("=" * 60)
 
-    # ---- Load full training dataset ----
+    # ---- Load full training dataset (graph features computed once) ----
     print("\nLoading training dataset...")
     full_train_ds = SurfProDataset(
         root=config.data_dir,
@@ -85,12 +92,27 @@ def main():
         val_indices = fold_indices[fold]
         train_indices = [i for f2 in range(10) if f2 != fold for i in fold_indices[f2]]
 
+        print(f"Train: {len(train_indices)} | Val: {len(val_indices)}")
+
+        # ---- Compute fold-specific scaler from training fold only ----
+        # This prevents scaler data leakage (val data doesn't influence normalization)
+        print("Computing fold-specific scaler...")
+        fold_scaler = compute_scaler_from_subset(full_train_ds, train_indices)
+        print(f"  target_mean: {np.round(fold_scaler['target_mean'], 4)}")
+        print(f"  target_std:  {np.round(fold_scaler['target_std'], 4)}")
+        print(f"  temp_mean/std: {fold_scaler['temp_mean']:.2f} / {fold_scaler['temp_std']:.4f}")
+
+        # Rescale entire dataset with this fold's scaler
+        rescale_dataset(full_train_ds, fold_scaler)
+
+        # Build subsets and data loaders
+        # List indexing returns a shallow-copied Dataset (never BaseData), so
+        # narrow the PyG `Dataset | BaseData` return type for the type checker.
         train_subset = full_train_ds[train_indices]
         val_subset = full_train_ds[val_indices]
+        assert isinstance(train_subset, Dataset)
+        assert isinstance(val_subset, Dataset)
 
-        print(f"Train: {len(train_subset)} | Val: {len(val_subset)}")
-
-        # Data loaders
         train_loader = DataLoader(
             train_subset, batch_size=config.batch_size, shuffle=True,
             num_workers=config.num_workers,
@@ -113,6 +135,9 @@ def main():
             config=config,
             device=config.device,
             save_dir=str(fold_dir),
+            # Override target scaler with fold-specific values for correct denormalization
+            target_mean=fold_scaler["target_mean"],
+            target_std=fold_scaler["target_std"],
         )
         val_metrics = trainer.train()
 

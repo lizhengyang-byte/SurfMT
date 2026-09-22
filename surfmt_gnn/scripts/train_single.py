@@ -1,7 +1,7 @@
 """Train a single SurfMT-GNN model and evaluate on test set.
 
 Usage:
-    python scripts/train_single.py --seed 42 --output_dir outputs/single_seed42
+    python surfmt_gnn/scripts/train_single.py --seed 42 --output_dir outputs/gnn_single_seed42
 """
 import argparse
 import json
@@ -10,10 +10,11 @@ from pathlib import Path
 
 import numpy as np
 import torch
+from torch_geometric.data import Dataset
 from torch_geometric.loader import DataLoader
 
-# Add project root to path
-project_root = Path(__file__).resolve().parent.parent
+# Add project root to path (script lives at surfmt_gnn/scripts/, so go up 3 levels)
+project_root = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from surfmt_gnn.config import Config
@@ -85,8 +86,12 @@ def main():
         else:
             train_indices.append(i)
 
+    # List indexing returns a shallow-copied Dataset (never BaseData), so
+    # narrow the PyG `Dataset | BaseData` return type for the type checker.
     train_subset = train_ds[train_indices]
     val_subset = train_ds[val_indices]
+    assert isinstance(train_subset, Dataset)
+    assert isinstance(val_subset, Dataset)
 
     print(f"Train split: {len(train_subset)} | Val split: {len(val_subset)}")
 
