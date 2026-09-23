@@ -1,0 +1,49 @@
+{
+  "seed": 42,
+  "tasks": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "n_train": 1335,
+  "n_features": 4329,
+  "test_metrics": {
+    "pCMC_r2": 0.8206149132393705,
+    "pCMC_rmse": 0.4706712278347687,
+    "pCMC_mae": 0.34740515298727564,
+    "gamma_CMC_r2": 0.5973327540374139,
+    "gamma_CMC_rmse": 4.539640366938139,
+    "gamma_CMC_mae": 3.3214547100954186,
+    "Gamma_max_r2": 0.6553481895725746,
+    "Gamma_max_rmse": 8.269895989055834e-07,
+    "Gamma_max_mae": 5.053916438148269e-07,
+    "A_min_r2": 0.6883818452329652,
+    "A_min_rmse": 0.4506148764289008,
+    "A_min_mae": 0.2555417633628672,
+    "pi_CMC_r2": 0.5680496605254006,
+    "pi_CMC_rmse": 4.73338929874553,
+    "pi_CMC_mae": 3.2693211982000436,
+    "pC20_r2": 0.6531252049943727,
+    "pC20_rmse": 0.7032387799219793,
+    "pC20_mae": 0.5370479096258863,
+    "avg_r2": 0.6638087612670162,
+    "avg_rmse": 1.8162592294764863,
+    "avg_mae": 1.288461873277189
+  },
+  "output_dir": "outputs\\rf_analysis",
+  "files": {
+    "feature_importance": [
+      "outputs\\rf_analysis\\feature_importance\\block_gain_importance.png",
+      "outputs\\rf_analysis\\feature_importance\\block_permutation_importance.png",
+      "outputs\\rf_analysis\\feature_importance\\descriptor_importance_heatmap.png"
+    ],
+    "shap": [
+      "outputs\\rf_analysis\\shap\\shap_block_importance.png"
+    ],
+    "substructures": "outputs\\rf_analysis\\substructures\\top_fingerprint_bits.json",
+    "report": "outputs\\rf_analysis\\report.md"
+  }
+}

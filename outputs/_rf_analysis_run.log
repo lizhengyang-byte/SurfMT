@@ -1,0 +1,56 @@
+================================================================
+SurfMT-RandomForest 树模型专业分析
+seed=42  output_dir=outputs\rf_analysis
+================================================================
+
+[1/5] 加载数据 + 重训每任务模型 ...
+Train: 1335 samples, 4329 features
+Test:  140 samples
+  Task 0: samples=1204, transform=none
+    n_estimators=100: CV RMSE=0.7499
+    n_estimators=300: CV RMSE=0.7511
+    n_estimators=600: CV RMSE=0.7508
+    n_estimators=1000: CV RMSE=0.7507
+  Task 1: samples=843, transform=log
+    n_estimators=100: CV RMSE=0.1499
+    n_estimators=300: CV RMSE=0.1496
+    n_estimators=600: CV RMSE=0.1493
+    n_estimators=1000: CV RMSE=0.1490
+  Task 2: samples=628, transform=log
+    n_estimators=100: CV RMSE=0.4960
+    n_estimators=300: CV RMSE=0.4908
+    n_estimators=600: CV RMSE=0.4898
+    n_estimators=1000: CV RMSE=0.4905
+  Task 3: samples=607, transform=log
+    n_estimators=100: CV RMSE=0.5684
+    n_estimators=300: CV RMSE=0.5605
+    n_estimators=600: CV RMSE=0.5634
+    n_estimators=1000: CV RMSE=0.5620
+  Task 4: samples=631, transform=none
+    n_estimators=100: CV RMSE=5.1792
+    n_estimators=300: CV RMSE=5.1825
+    n_estimators=600: CV RMSE=5.1794
+    n_estimators=1000: CV RMSE=5.1877
+  Task 5: samples=564, transform=none
+    n_estimators=100: CV RMSE=0.8703
+    n_estimators=300: CV RMSE=0.8646
+    n_estimators=600: CV RMSE=0.8658
+    n_estimators=1000: CV RMSE=0.8638
+
+[2/5] 特征重要性全套 (gain/split/块/置换) ...
+  特征重要性图已生成: outputs\rf_analysis\feature_importance
+
+[3/5] SHAP 解释性（每任务子采样 ≤500 行）...
+  SHAP 图已生成: outputs\rf_analysis\shap
+
+[4/5] 指纹位 → 子结构反向映射 ...
+  已映射 40 个指纹位 -> outputs\rf_analysis\substructures\top_fingerprint_bits.json
+
+[5/5] 生成 Markdown 分析报告 ...
+  报告已生成: outputs\rf_analysis\report.md
+
+================================================================
+分析完成。产物位于: outputs\rf_analysis
+  - 报告: report.md
+  - 摘要: analysis_summary.json
+================================================================

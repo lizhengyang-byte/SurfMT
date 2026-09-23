@@ -1,0 +1,202 @@
+[
+  {
+    "feature": "MolLogP",
+    "importance": 2496.464293152094
+  },
+  {
+    "feature": "Chi1v",
+    "importance": 1256.3054049536586
+  },
+  {
+    "feature": "Chi0",
+    "importance": 1234.4288198798895
+  },
+  {
+    "feature": "Chi1",
+    "importance": 981.9702148810029
+  },
+  {
+    "feature": "SlogP_VSA5",
+    "importance": 872.2654836401343
+  },
+  {
+    "feature": "BalabanJ",
+    "importance": 683.2500897869468
+  },
+  {
+    "feature": "Chi3v",
+    "importance": 672.8899479135871
+  },
+  {
+    "feature": "Chi4v",
+    "importance": 440.18119110167027
+  },
+  {
+    "feature": "Kappa3",
+    "importance": 380.5872498601675
+  },
+  {
+    "feature": "TPSA",
+    "importance": 365.81677735596895
+  },
+  {
+    "feature": "ecfp6_725",
+    "importance": 361.82089656591415
+  },
+  {
+    "feature": "NumRotatableBonds",
+    "importance": 350.0443857833743
+  },
+  {
+    "feature": "Chi3n",
+    "importance": 346.88334023207426
+  },
+  {
+    "feature": "Kappa2",
+    "importance": 279.0348531603813
+  },
+  {
+    "feature": "SlogP_VSA1",
+    "importance": 269.41321025043726
+  },
+  {
+    "feature": "MinAbsPartialCharge",
+    "importance": 237.48743510246277
+  },
+  {
+    "feature": "Chi4n",
+    "importance": 229.63328913599253
+  },
+  {
+    "feature": "MinPartialCharge",
+    "importance": 218.10453042387962
+  },
+  {
+    "feature": "MolWt",
+    "importance": 198.0859399139881
+  },
+  {
+    "feature": "MinEStateIndex",
+    "importance": 171.63281626999378
+  },
+  {
+    "feature": "BertzCT",
+    "importance": 164.98142091929913
+  },
+  {
+    "feature": "MaxAbsEStateIndex",
+    "importance": 148.4491891413927
+  },
+  {
+    "feature": "HallKierAlpha",
+    "importance": 147.78607739508152
+  },
+  {
+    "feature": "Chi2v",
+    "importance": 140.9389909207821
+  },
+  {
+    "feature": "ecfp6_642",
+    "importance": 129.94305711984634
+  },
+  {
+    "feature": "SlogP_VSA2",
+    "importance": 125.16138122230768
+  },
+  {
+    "feature": "NHOHCount",
+    "importance": 122.63220663368702
+  },
+  {
+    "feature": "ecfp6_784",
+    "importance": 113.27414125204086
+  },
+  {
+    "feature": "NumHDonors",
+    "importance": 102.6365028321743
+  },
+  {
+    "feature": "NOCount",
+    "importance": 101.5271529480815
+  },
+  {
+    "feature": "Chi0v",
+    "importance": 99.08798012137413
+  },
+  {
+    "feature": "Chi2n",
+    "importance": 97.67578073590994
+  },
+  {
+    "feature": "NumHAcceptors",
+    "importance": 89.2814217209816
+  },
+  {
+    "feature": "maccs_101",
+    "importance": 86.1572242975235
+  },
+  {
+    "feature": "SlogP_VSA8",
+    "importance": 86.11291155219078
+  },
+  {
+    "feature": "FractionCSP3",
+    "importance": 83.23926774412394
+  },
+  {
+    "feature": "MinAbsEStateIndex",
+    "importance": 82.79773097485304
+  },
+  {
+    "feature": "SlogP_VSA3",
+    "importance": 78.80809060484171
+  },
+  {
+    "feature": "MolMR",
+    "importance": 74.17347726225853
+  },
+  {
+    "feature": "ecfp4_575",
+    "importance": 68.90865957736969
+  },
+  {
+    "feature": "maccs_90",
+    "importance": 62.8602786809206
+  },
+  {
+    "feature": "maccs_49",
+    "importance": 61.378380835056305
+  },
+  {
+    "feature": "ecfp6_885",
+    "importance": 59.86596705764532
+  },
+  {
+    "feature": "LabuteASA",
+    "importance": 58.58158238977194
+  },
+  {
+    "feature": "MaxEStateIndex",
+    "importance": 54.849344074726105
+  },
+  {
+    "feature": "ecfp4_1249",
+    "importance": 54.768108412623405
+  },
+  {
+    "feature": "Chi1n",
+    "importance": 52.842606626451015
+  },
+  {
+    "feature": "Kappa1",
+    "importance": 52.52404452115297
+  },
+  {
+    "feature": "MaxPartialCharge",
+    "importance": 51.38641983270645
+  },
+  {
+    "feature": "maccs_166",
+    "importance": 48.02381181716919
+  }
+]

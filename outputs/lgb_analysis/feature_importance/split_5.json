@@ -1,0 +1,202 @@
+[
+  {
+    "feature": "MolLogP",
+    "importance": 794.0
+  },
+  {
+    "feature": "Kappa3",
+    "importance": 615.0
+  },
+  {
+    "feature": "MaxAbsEStateIndex",
+    "importance": 527.0
+  },
+  {
+    "feature": "SlogP_VSA5",
+    "importance": 520.0
+  },
+  {
+    "feature": "BertzCT",
+    "importance": 509.0
+  },
+  {
+    "feature": "MolWt",
+    "importance": 497.0
+  },
+  {
+    "feature": "Kappa2",
+    "importance": 462.0
+  },
+  {
+    "feature": "MinAbsPartialCharge",
+    "importance": 412.0
+  },
+  {
+    "feature": "BalabanJ",
+    "importance": 381.0
+  },
+  {
+    "feature": "Chi4n",
+    "importance": 348.0
+  },
+  {
+    "feature": "HallKierAlpha",
+    "importance": 337.0
+  },
+  {
+    "feature": "Kappa1",
+    "importance": 307.0
+  },
+  {
+    "feature": "MinEStateIndex",
+    "importance": 305.0
+  },
+  {
+    "feature": "SlogP_VSA2",
+    "importance": 300.0
+  },
+  {
+    "feature": "Chi4v",
+    "importance": 299.0
+  },
+  {
+    "feature": "Chi3n",
+    "importance": 291.0
+  },
+  {
+    "feature": "FractionCSP3",
+    "importance": 255.0
+  },
+  {
+    "feature": "TPSA",
+    "importance": 254.0
+  },
+  {
+    "feature": "NumRotatableBonds",
+    "importance": 250.0
+  },
+  {
+    "feature": "SlogP_VSA1",
+    "importance": 236.0
+  },
+  {
+    "feature": "Chi2v",
+    "importance": 232.0
+  },
+  {
+    "feature": "Chi0v",
+    "importance": 230.0
+  },
+  {
+    "feature": "Chi2n",
+    "importance": 215.0
+  },
+  {
+    "feature": "Chi3v",
+    "importance": 210.0
+  },
+  {
+    "feature": "LabuteASA",
+    "importance": 200.0
+  },
+  {
+    "feature": "Chi1",
+    "importance": 194.0
+  },
+  {
+    "feature": "SlogP_VSA3",
+    "importance": 182.0
+  },
+  {
+    "feature": "Chi1n",
+    "importance": 168.0
+  },
+  {
+    "feature": "Chi0n",
+    "importance": 168.0
+  },
+  {
+    "feature": "Chi0",
+    "importance": 165.0
+  },
+  {
+    "feature": "Chi1v",
+    "importance": 159.0
+  },
+  {
+    "feature": "MolMR",
+    "importance": 140.0
+  },
+  {
+    "feature": "MinAbsEStateIndex",
+    "importance": 96.0
+  },
+  {
+    "feature": "MaxPartialCharge",
+    "importance": 78.0
+  },
+  {
+    "feature": "MaxEStateIndex",
+    "importance": 76.0
+  },
+  {
+    "feature": "NumHeteroatoms",
+    "importance": 71.0
+  },
+  {
+    "feature": "NumValenceElectrons",
+    "importance": 64.0
+  },
+  {
+    "feature": "NumHAcceptors",
+    "importance": 61.0
+  },
+  {
+    "feature": "HeavyAtomCount",
+    "importance": 60.0
+  },
+  {
+    "feature": "ecfp6_1646",
+    "importance": 54.0
+  },
+  {
+    "feature": "NOCount",
+    "importance": 47.0
+  },
+  {
+    "feature": "ecfp6_642",
+    "importance": 45.0
+  },
+  {
+    "feature": "SlogP_VSA6",
+    "importance": 34.0
+  },
+  {
+    "feature": "NumHDonors",
+    "importance": 33.0
+  },
+  {
+    "feature": "maccs_72",
+    "importance": 31.0
+  },
+  {
+    "feature": "NHOHCount",
+    "importance": 25.0
+  },
+  {
+    "feature": "ecfp6_1091",
+    "importance": 23.0
+  },
+  {
+    "feature": "ecfp6_61",
+    "importance": 23.0
+  },
+  {
+    "feature": "MinPartialCharge",
+    "importance": 23.0
+  },
+  {
+    "feature": "maccs_80",
+    "importance": 22.0
+  }
+]

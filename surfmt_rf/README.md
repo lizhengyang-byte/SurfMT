@@ -52,12 +52,41 @@ python surfmt_rf/main.py --seed 42 --output_dir outputs/rf_seed42
 | `--output_dir` | outputs/rf_seed42 | Results output dir |
 | `--hetero` | False | Heterogeneous ensemble over `DIVERSE_CONFIGS` |
 
+## Analysis: tree-model interpretability
+
+Run the professional analysis bundle (feature importance, SHAP, fingerprint
+substructure mapping, markdown report):
+
+```bash
+python surfmt_rf/analyze.py --seed 42 --output_dir outputs/rf_analysis
+```
+
+`analyze.py` retrains the per-task models, then writes to
+`outputs/rf_analysis/`:
+
+- `feature_importance/` — gain (`feature_importances_`) / split (learned split
+  tally across all trees), block aggregation, permutation importance, descriptor
+  gain heatmap.
+- `shap/` — per-task beeswarm summary, dependence, waterfall, global block
+  |SHAP|, raw SHAP values (`shap_values.npz`).
+- `substructures/top_fingerprint_bits.json` — reverse-mapped Morgan substructures
+  for the most important fingerprint bits.
+- `report.md` — structured Chinese analysis report.
+- `analysis_summary.json` — machine-readable summary.
+
+Options: `--task <idx>` (single task), `--no_shap` (skip SHAP), `--shap_samples`
+(rows sub-sampled per task for SHAP), `--top_bits` (fingerprint bits to map),
+`--candidates` (custom `n_estimators` sweep). Add `shap` to your env via
+`pip install -r requirements.txt` (now includes it).
+
 ## Files
 
 - `features.py` — feature extraction (ECFP4/6 + MACCS + descriptors + temperature)
 - `data.py` — CSV loading, missing-label masks, fold split
 - `train.py` — per-task Random Forest training with CV-selected tree count
 - `metrics.py` — masked R2 / RMSE / MAE
+- `interpret.py` — interpretability helpers (importance, SHAP, substructure mapping)
+- `analyze.py` — end-to-end tree-model analysis entry point
 - `main.py` — end-to-end entry point
 
 ## Configuration

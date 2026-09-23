@@ -1,0 +1,202 @@
+[
+  {
+    "feature": "MaxAbsEStateIndex",
+    "importance": 0.014663113333226273
+  },
+  {
+    "feature": "SlogP_VSA5",
+    "importance": 0.013903618327458664
+  },
+  {
+    "feature": "MaxEStateIndex",
+    "importance": 0.013828074282449929
+  },
+  {
+    "feature": "Chi4n",
+    "importance": 0.01248157206553406
+  },
+  {
+    "feature": "MolLogP",
+    "importance": 0.011910021347243165
+  },
+  {
+    "feature": "BalabanJ",
+    "importance": 0.011710776596605951
+  },
+  {
+    "feature": "Kappa2",
+    "importance": 0.011639207756209876
+  },
+  {
+    "feature": "MinEStateIndex",
+    "importance": 0.011184860121682474
+  },
+  {
+    "feature": "Chi4v",
+    "importance": 0.01113100764682029
+  },
+  {
+    "feature": "Chi3n",
+    "importance": 0.010639175716331118
+  },
+  {
+    "feature": "BertzCT",
+    "importance": 0.010578839726901011
+  },
+  {
+    "feature": "Chi0v",
+    "importance": 0.01035483344663564
+  },
+  {
+    "feature": "Chi1n",
+    "importance": 0.010322148635406534
+  },
+  {
+    "feature": "Chi0n",
+    "importance": 0.010091527525185157
+  },
+  {
+    "feature": "Chi2n",
+    "importance": 0.009992018316768032
+  },
+  {
+    "feature": "LabuteASA",
+    "importance": 0.009940860569618846
+  },
+  {
+    "feature": "Chi3v",
+    "importance": 0.009907828455278316
+  },
+  {
+    "feature": "MolMR",
+    "importance": 0.009784676870257485
+  },
+  {
+    "feature": "Kappa1",
+    "importance": 0.009767547949183074
+  },
+  {
+    "feature": "FractionCSP3",
+    "importance": 0.009711746371113808
+  },
+  {
+    "feature": "Chi1",
+    "importance": 0.00929814977596284
+  },
+  {
+    "feature": "Chi1v",
+    "importance": 0.009214182266356934
+  },
+  {
+    "feature": "Chi2v",
+    "importance": 0.009205078805901133
+  },
+  {
+    "feature": "Kappa3",
+    "importance": 0.00919422742605608
+  },
+  {
+    "feature": "MolWt",
+    "importance": 0.009095990199918028
+  },
+  {
+    "feature": "NumRotatableBonds",
+    "importance": 0.009055436344189781
+  },
+  {
+    "feature": "NumValenceElectrons",
+    "importance": 0.008977786404894857
+  },
+  {
+    "feature": "Chi0",
+    "importance": 0.008565842176569131
+  },
+  {
+    "feature": "HeavyAtomCount",
+    "importance": 0.008425501876922654
+  },
+  {
+    "feature": "SlogP_VSA2",
+    "importance": 0.008220491463075316
+  },
+  {
+    "feature": "MinPartialCharge",
+    "importance": 0.007394980379675386
+  },
+  {
+    "feature": "HallKierAlpha",
+    "importance": 0.0072576127652084306
+  },
+  {
+    "feature": "MinAbsPartialCharge",
+    "importance": 0.0067860492379531396
+  },
+  {
+    "feature": "SlogP_VSA6",
+    "importance": 0.006717248754923286
+  },
+  {
+    "feature": "MinAbsEStateIndex",
+    "importance": 0.0063697807305594795
+  },
+  {
+    "feature": "MaxPartialCharge",
+    "importance": 0.006218195658505004
+  },
+  {
+    "feature": "SlogP_VSA1",
+    "importance": 0.005745879723762484
+  },
+  {
+    "feature": "NumHeteroatoms",
+    "importance": 0.005078013500630657
+  },
+  {
+    "feature": "TPSA",
+    "importance": 0.004972874737000024
+  },
+  {
+    "feature": "ecfp4_1453",
+    "importance": 0.004959698231169552
+  },
+  {
+    "feature": "maccs_125",
+    "importance": 0.004862380523738996
+  },
+  {
+    "feature": "maccs_122",
+    "importance": 0.004512845699252267
+  },
+  {
+    "feature": "maccs_107",
+    "importance": 0.004337547092575415
+  },
+  {
+    "feature": "SlogP_VSA3",
+    "importance": 0.0043350745178670005
+  },
+  {
+    "feature": "ecfp4_1398",
+    "importance": 0.004273742499051042
+  },
+  {
+    "feature": "NumAromaticRings",
+    "importance": 0.004234492613215113
+  },
+  {
+    "feature": "RingCount",
+    "importance": 0.0041806477673036425
+  },
+  {
+    "feature": "maccs_42",
+    "importance": 0.004105371259740342
+  },
+  {
+    "feature": "ecfp6_784",
+    "importance": 0.004069750770389765
+  },
+  {
+    "feature": "maccs_162",
+    "importance": 0.003988976521258374
+  }
+]

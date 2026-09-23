@@ -1,0 +1,446 @@
+[
+  {
+    "block": "ecfp4",
+    "global_index": 1453,
+    "local_bit": 1453,
+    "radius": 2,
+    "importance": 435.514217376709,
+    "fragments": [
+      "CF"
+    ]
+  },
+  {
+    "block": "ecfp4",
+    "global_index": 845,
+    "local_bit": 845,
+    "radius": 2,
+    "importance": 355.64280635118484,
+    "fragments": [
+      "CC(=O)OC(C)C",
+      "c[n+](c)COC"
+    ]
+  },
+  {
+    "block": "ecfp4",
+    "global_index": 575,
+    "local_bit": 575,
+    "radius": 2,
+    "importance": 331.0738295316696,
+    "fragments": [
+      "CCC(=O)OC",
+      "ccc[n+](c)C"
+    ]
+  },
+  {
+    "block": "ecfp4",
+    "global_index": 2038,
+    "local_bit": 2038,
+    "radius": 2,
+    "importance": 224.5054999855347,
+    "fragments": [
+      "CC(C)O"
+    ]
+  },
+  {
+    "block": "ecfp4",
+    "global_index": 38,
+    "local_bit": 38,
+    "radius": 2,
+    "importance": 206.28694805898704,
+    "fragments": [
+      "CC(=O)[O-]",
+      "CCC[N+](C)(C)C"
+    ]
+  },
+  {
+    "block": "ecfp4",
+    "global_index": 1992,
+    "local_bit": 1992,
+    "radius": 2,
+    "importance": 175.8090728931129,
+    "fragments": [
+      "COC"
+    ]
+  },
+  {
+    "block": "ecfp4",
+    "global_index": 1866,
+    "local_bit": 1866,
+    "radius": 2,
+    "importance": 168.9878664361313,
+    "fragments": [
+      "",
+      "ccn",
+      "ncccn"
+    ]
+  },
+  {
+    "block": "ecfp4",
+    "global_index": 1686,
+    "local_bit": 1686,
+    "radius": 2,
+    "importance": 144.98371157422662,
+    "fragments": [
+      "cc(c)C(CC)CC",
+      "cccc[n+]"
+    ]
+  },
+  {
+    "block": "ecfp4",
+    "global_index": 96,
+    "local_bit": 96,
+    "radius": 2,
+    "importance": 126.65475976467133,
+    "fragments": [
+      "COS"
+    ]
+  },
+  {
+    "block": "ecfp4",
+    "global_index": 883,
+    "local_bit": 883,
+    "radius": 2,
+    "importance": 123.2905707359314,
+    "fragments": [
+      "ccc(cc)c(c)[n+]"
+    ]
+  },
+  {
+    "block": "ecfp4",
+    "global_index": 26,
+    "local_bit": 26,
+    "radius": 2,
+    "importance": 116.22174927592278,
+    "fragments": [
+      "CC(S)CC(=O)O",
+      "c[n+](c)C",
+      "CCSCC",
+      "CCCC(C)(F)F"
+    ]
+  },
+  {
+    "block": "ecfp4",
+    "global_index": 350,
+    "local_bit": 350,
+    "radius": 2,
+    "importance": 114.45805937051773,
+    "fragments": [
+      ""
+    ]
+  },
+  {
+    "block": "ecfp4",
+    "global_index": 13,
+    "local_bit": 13,
+    "radius": 2,
+    "importance": 94.35765765421093,
+    "fragments": [
+      "CCO"
+    ]
+  },
+  {
+    "block": "ecfp4",
+    "global_index": 597,
+    "local_bit": 597,
+    "radius": 2,
+    "importance": 91.9374078931287,
+    "fragments": [
+      "CCNC(C)=O",
+      "nCC(O)CO"
+    ]
+  },
+  {
+    "block": "ecfp4",
+    "global_index": 1249,
+    "local_bit": 1249,
+    "radius": 2,
+    "importance": 91.30062397522852,
+    "fragments": [
+      "CCCCO"
+    ]
+  },
+  {
+    "block": "ecfp4",
+    "global_index": 691,
+    "local_bit": 691,
+    "radius": 2,
+    "importance": 90.38770660199225,
+    "fragments": [
+      "CCOCC"
+    ]
+  },
+  {
+    "block": "ecfp4",
+    "global_index": 1402,
+    "local_bit": 1402,
+    "radius": 2,
+    "importance": 86.66093712300062,
+    "fragments": [
+      "CC[N+]"
+    ]
+  },
+  {
+    "block": "ecfp4",
+    "global_index": 1143,
+    "local_bit": 1143,
+    "radius": 2,
+    "importance": 83.74211838841438,
+    "fragments": [
+      "CCCCC"
+    ]
+  },
+  {
+    "block": "ecfp4",
+    "global_index": 1,
+    "local_bit": 1,
+    "radius": 2,
+    "importance": 78.25108486972749,
+    "fragments": [
+      ""
+    ]
+  },
+  {
+    "block": "ecfp4",
+    "global_index": 1325,
+    "local_bit": 1325,
+    "radius": 2,
+    "importance": 77.09111258015037,
+    "fragments": [
+      "CCCOC",
+      "CC=N"
+    ]
+  },
+  {
+    "block": "ecfp6",
+    "global_index": 2773,
+    "local_bit": 725,
+    "radius": 3,
+    "importance": 514.0861816555262,
+    "fragments": [
+      "",
+      "ccc(OC(=O)CC)c(c)[n+]"
+    ]
+  },
+  {
+    "block": "ecfp6",
+    "global_index": 2832,
+    "local_bit": 784,
+    "radius": 3,
+    "importance": 417.1242410764098,
+    "fragments": [
+      "CCCCCCC"
+    ]
+  },
+  {
+    "block": "ecfp6",
+    "global_index": 3694,
+    "local_bit": 1646,
+    "radius": 3,
+    "importance": 333.5040157288313,
+    "fragments": [
+      "cn(c)CC(O)COC"
+    ]
+  },
+  {
+    "block": "ecfp6",
+    "global_index": 2690,
+    "local_bit": 642,
+    "radius": 3,
+    "importance": 273.16279042325914,
+    "fragments": [
+      "CCCCCCO",
+      "[C@H]COS(=O)(=O)[O-]"
+    ]
+  },
+  {
+    "block": "ecfp6",
+    "global_index": 2144,
+    "local_bit": 96,
+    "radius": 3,
+    "importance": 271.9856759905815,
+    "fragments": [
+      "COS",
+      "C[SiH](O)O[SiH](C)O[SiH](C)O"
+    ]
+  },
+  {
+    "block": "ecfp6",
+    "global_index": 3908,
+    "local_bit": 1860,
+    "radius": 3,
+    "importance": 223.21703594736755,
+    "fragments": [
+      "CCOCC(O)Cn",
+      "CCN",
+      "CCCNC(N)[NH3+]"
+    ]
+  },
+  {
+    "block": "ecfp6",
+    "global_index": 2619,
+    "local_bit": 571,
+    "radius": 3,
+    "importance": 141.53634864091873,
+    "fragments": [
+      "CC[n+]1cccc2cccc(OC)c21",
+      "CCC(=O)NCC[N+]",
+      "Cc1cccc[n+]1"
+    ]
+  },
+  {
+    "block": "ecfp6",
+    "global_index": 2064,
+    "local_bit": 16,
+    "radius": 3,
+    "importance": 109.72271095588803,
+    "fragments": [
+      "CCC(CC)OS(=O)(=O)[O-]",
+      "cc(c)OC(CCC)CCS",
+      "CC(=O)NCCC[N+]",
+      "cc1cccc(OC(C)=O)c1[n+](c)C"
+    ]
+  },
+  {
+    "block": "ecfp6",
+    "global_index": 2389,
+    "local_bit": 341,
+    "radius": 3,
+    "importance": 87.13650933653116,
+    "fragments": [
+      "CCCS(=O)(=O)[O-]",
+      "C=NCCC",
+      "ccn(c[n+])CC(O)CO"
+    ]
+  },
+  {
+    "block": "ecfp6",
+    "global_index": 3149,
+    "local_bit": 1101,
+    "radius": 3,
+    "importance": 78.57168623805046,
+    "fragments": [
+      "ccn",
+      "CCCCC(C)(OC)OC"
+    ]
+  },
+  {
+    "block": "ecfp6",
+    "global_index": 2250,
+    "local_bit": 202,
+    "radius": 3,
+    "importance": 72.75653629004955,
+    "fragments": [
+      "CCC(CC)OC",
+      "cc(c)O",
+      "cccc(c)N",
+      "c[n+](c)[C@@H]1O[C@H](CO)[C@@H](O)[C@H][C@H]1O",
+      "c[n+](c)[C@H]1O[C@H](CO)[C@@H](O)[C@H][C@H]1O",
+      "CCn1cc[n+](Cc)c1",
+      "[C@@H]C(O)S"
+    ]
+  },
+  {
+    "block": "ecfp6",
+    "global_index": 3114,
+    "local_bit": 1066,
+    "radius": 3,
+    "importance": 67.87617852538824,
+    "fragments": [
+      "CCCC(CC)COC",
+      "cccc(c)C",
+      "CC(=O)NCC[N+](C)(C)C",
+      "CC[n+]1ccccc1"
+    ]
+  },
+  {
+    "block": "ecfp6",
+    "global_index": 2086,
+    "local_bit": 38,
+    "radius": 3,
+    "importance": 66.60272388532758,
+    "fragments": [
+      "CC(=O)[O-]",
+      "CCC[N+](C)(C)C",
+      "CC(=O)N1CCOCC1"
+    ]
+  },
+  {
+    "block": "ecfp6",
+    "global_index": 3067,
+    "local_bit": 1019,
+    "radius": 3,
+    "importance": 65.05207446590066,
+    "fragments": [
+      "O=S(=O)([O-])O",
+      ""
+    ]
+  },
+  {
+    "block": "ecfp6",
+    "global_index": 2805,
+    "local_bit": 757,
+    "radius": 3,
+    "importance": 63.913125932216644,
+    "fragments": [
+      "CCCC[N+](C)(C)Cc",
+      "cc[n+](cn)CC"
+    ]
+  },
+  {
+    "block": "ecfp6",
+    "global_index": 3651,
+    "local_bit": 1603,
+    "radius": 3,
+    "importance": 63.87746422365308,
+    "fragments": [
+      "CCCCCCC"
+    ]
+  },
+  {
+    "block": "ecfp6",
+    "global_index": 3219,
+    "local_bit": 1171,
+    "radius": 3,
+    "importance": 63.07699175365269,
+    "fragments": [
+      "CCCCC[N+](C)(C)c",
+      "CC([NH3+])CCCCN",
+      "",
+      "CCCCC[N+](c)(C)C",
+      "[C@H][C@@](C)(O)O[C@H]1O[C@H](C)[C@H][C@H](O)[C@H]1O"
+    ]
+  },
+  {
+    "block": "ecfp6",
+    "global_index": 2933,
+    "local_bit": 885,
+    "radius": 3,
+    "importance": 59.86596705764532,
+    "fragments": [
+      "Cc1ccccc1CO",
+      "cc(c)s",
+      "CCOCCN(C)C"
+    ]
+  },
+  {
+    "block": "ecfp6",
+    "global_index": 3373,
+    "local_bit": 1325,
+    "radius": 3,
+    "importance": 50.909011421725154,
+    "fragments": [
+      "CCCOC",
+      "CC=N"
+    ]
+  },
+  {
+    "block": "ecfp6",
+    "global_index": 2190,
+    "local_bit": 142,
+    "radius": 3,
+    "importance": 49.35563758807257,
+    "fragments": [
+      "CCCCCOC"
+    ]
+  }
+]
